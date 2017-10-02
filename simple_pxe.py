@@ -11,6 +11,7 @@ import argparse
 import http.server
 import socketserver
 import shutil
+import platform
 
 CONFIG = '''port=0
 interface={}
@@ -26,6 +27,13 @@ tftp-root={}
 
 
 if __name__ == "__main__":
+    distro = platform.linux_distribution()
+
+    if 'arch' in distro:
+        service_call = "systemctl {command} {service}.service"
+    else:
+        service_call = "service {service} {command}"
+
     parser = argparse.ArgumentParser(description='Serve archlinux over pxe.')
     parser.add_argument('--interface', help='interface to serve on, default is enp0s25', default='enp0s25')
     parser.add_argument('--iso', help='iso to server', required=True)
@@ -59,7 +67,8 @@ if __name__ == "__main__":
 
     # Stop annoying services
     print('[*] Stopping some services')
-    os.system('systemctl stop NetworkManager.service')
+    # os.system('systemctl stop NetworkManager.service')
+    os.system(service_call.format(command="stop", service='NetworkManager'))
     
     # Configure network
     print('[*] Configureing network')
@@ -68,7 +77,8 @@ if __name__ == "__main__":
     # Start dnsmasq
     print('[*] Starting dns and http-server')
     # os.system('service dnsmasq start')
-    os.system('systemctl start dnsmasq.service')
+    # os.system('systemctl start dnsmasq.service')
+    os.system(service_call.format(command='start', service='dnsmasq'))
     
     # start webserver
     PORT = 80
@@ -83,11 +93,13 @@ if __name__ == "__main__":
     # Cleanup
     print('[*] Cleaning up')
     ## dnsmasq
-    os.system('systemctl stop dnsmasq.service')
+    # os.system('systemctl stop dnsmasq.service')
+    os.system(service_call.format(command='stop', service='dnsmasq'))
     shutil.move('/etc/dnsmasq.conf.bak', '/etc/dnsmasq.conf')
 
     ## other services
-    os.system('systemctl start NetworkManager.service')
+    # os.system('systemctl start NetworkManager.service')
+    os.system(service_call.format(command='start', service='NetworkManager'))
         
     ## umount image
     os.chdir('/tmp/')
