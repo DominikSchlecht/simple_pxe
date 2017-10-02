@@ -67,7 +67,8 @@ if __name__ == "__main__":
 
     # Start dnsmasq
     print('[*] Starting dns and http-server')
-    os.system('service dnsmasq start')
+    # os.system('service dnsmasq start')
+    os.system('systemctl start dnsmasq.service')
     
     # start webserver
     PORT = 80
@@ -77,12 +78,12 @@ if __name__ == "__main__":
     print("[*] Serving at port {} at {}".format(PORT, os.getcwd()))
     print("[*] Press ctrl+c to stop")
 
-    os.system('python3 -m http.server 80')
+    os.system('python3 -m http.server {}'.format(PORT))
     
     # Cleanup
     print('[*] Cleaning up')
     ## dnsmasq
-    os.system('service dnsmasq stop')
+    os.system('systemctl stop dnsmasq.service')
     shutil.move('/etc/dnsmasq.conf.bak', '/etc/dnsmasq.conf')
 
     ## other services
